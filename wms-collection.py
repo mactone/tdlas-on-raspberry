@@ -80,8 +80,6 @@ def decompose(sig,start_position):
     print('2f peak value=',t[peaks])
     print('2f/1f @ peak=',wms_peak)
 
-init_Serial()
-
 sig=[]
 start_position=1    #Signal的第一個開始解析
 
@@ -96,22 +94,48 @@ start_position=1    #Signal的第一個開始解析
 #    decompose(sig,start_position)
 #    start_position=start_position+3
 
-ser.write(b'meas on\r')
+def meason():
+    init_Serial()
+    ser.write(b'meas on\r')
 
-for i in range(50):  #一個start指令，會輸出3個byte (start OK, amp1f; i2f)
-    sig.append(ser.readline())
-#    print(sig)
-    print('**')
-    time.sleep(0.001)
+def measoff():
+    ser.write(b'meas off\r')    
+#    print(ser.readlines())
+    ser.close()
 
-sig2=[]
-for i in range(50):
-    pattern=re.compile(r'[+-]?\d{1,5}')
-    sig=list(map(str,sig))
-    s=re.findall(pattern,sig[i])
-    sig2.append(s)
+pattern=re.compile(r'[+-]?\d{1,5}')
 
-ser.write(b'meas off\r')      
-ser.close()
+sig=[]
+meason()
+j=0
+for i in range(30):
+    b=ser.readline()
+    if i>0:
+        b=str(b,encoding="utf-8")
+        run,num=re.findall(pattern,b)
+#        print(num)
+        if i>3:
+            sig.append(num)
+            if j>10:
+                sig.pop(0)
+            j=j+1
+            print(i,j,num, max(sig),sig)
+    
+#for i in range(10):  #一個start指令，會輸出3個byte (start OK, amp1f; i2f)
+#    sig.append(ser.readline())
+##    print(sig)
+#    print('**'+str(i))
+#    time.sleep(0.001)
+#
+#sig2=[]
+#for i in range(10):
+#    pattern=re.compile(r'[+-]?\d{1,5}')
+#    sig=list(map(str,sig))
+#    s=re.findall(pattern,sig[i])
+#    sig2.append(s)
+    
+measoff()
+
+
 
 
